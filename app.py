@@ -15,6 +15,25 @@ def format_date(date_str):
     except:
         return date_str
 
+def replace_placeholders_in_paragraph(paragraph, placeholders):
+    full_text = ''.join(run.text for run in paragraph.runs)
+    for key, val in placeholders.items():
+        if key in full_text:
+            full_text = full_text.replace(key, val)
+    for run in paragraph.runs:
+        run.text = ''
+    if paragraph.runs:
+        paragraph.runs[0].text = full_text
+
+def replace_in_doc(doc, placeholders):
+    for para in doc.paragraphs:
+        replace_placeholders_in_paragraph(para, placeholders)
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for para in cell.paragraphs:
+                    replace_placeholders_in_paragraph(para, placeholders)
+
 @app.route('/')
 def index():
     return "DOCX contract generator with formatted template is running."
@@ -47,20 +66,7 @@ def generate():
         "{{psc_odber}}": data.get("psc_odber", "")
     }
 
-    for para in doc.paragraphs:
-        for run in para.runs:
-            for key, val in placeholders.items():
-                if key in run.text:
-                    run.text = run.text.replace(key, val)
-
-    for table in doc.tables:
-        for row in table.rows:
-            for cell in row.cells:
-                for para in cell.paragraphs:
-                    for run in para.runs:
-                        for key, val in placeholders.items():
-                            if key in run.text:
-                                run.text = run.text.replace(key, val)
+    replace_in_doc(doc, placeholders)
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
         doc.save(tmp.name)
