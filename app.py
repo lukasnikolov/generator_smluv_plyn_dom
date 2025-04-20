@@ -17,7 +17,7 @@ def index():
 def generate():
     data = request.json
 
-    doc = Document("smlouva.docx")
+    doc = Document("Rekapitulace_Domacnost_Plyn.docx")
     placeholders = {
         "cislo_smlouvy": data.get("cislo_smlouvy", ""),
         "cislo_partnera": data.get("cislo_partnera", ""),
