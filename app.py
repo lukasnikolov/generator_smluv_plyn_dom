@@ -1,22 +1,24 @@
 
-from docxtpl import DocxTemplate
 from flask import Flask, request, send_file
+from docx import Document
+import os
+import io
 import tempfile
-from datetime import datetime
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
-def format_date(date_str):
-    try:
-        return datetime.strptime(date_str, "%d.%m.%Y").strftime("%-d. %-m. %Y")
-    except Exception:
-        return date_str
+@app.route('/')
+def index():
+    return "DOCX contract generator with formatted template is running."
 
-@app.route("/api/generate", methods=["POST"])
-def generate_doc():
-    data = request.get_json()
+@app.route('/api/generate', methods=['POST'])
+def generate():
+    data = request.json
 
-    values = {
+    doc = Document("smlouva.docx")
+    placeholders = {
         "cislo_smlouvy": data.get("cislo_smlouvy", ""),
         "cislo_partnera": data.get("cislo_partnera", ""),
         "jmeno": data.get("jmeno", ""),
@@ -39,9 +41,24 @@ def generate_doc():
         "psc_odber": data.get("psc_odber", "")
     }
 
-    doc = DocxTemplate("Rekapitulace_Domacnost_Plyn.docx")
-    doc.render(values)
+     }
+
+    for para in doc.paragraphs:
+        for key, val in placeholders.items():
+            if key in para.text:
+                para.text = para.text.replace(key, val)
+
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for key, val in placeholders.items():
+                    if key in cell.text:
+                        cell.text = cell.text.replace(key, val)
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
         doc.save(tmp.name)
-        return send_file(tmp.name, as_attachment=True, download_name="smlouva_plyn.docx")
+        tmp.seek(0)
+        return send_file(tmp.name, as_attachment=True, download_name="Rekapitulace_smlouvy_elektrina.docx")
+
+if __name__ == "__main__":
+    app.run(debug=False, host="0.0.0.0", port=10000)
