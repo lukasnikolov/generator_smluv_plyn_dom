@@ -53,7 +53,7 @@ def generate():
         "{{cislo_uctu}}": data.get("cislo_uctu", ""),
         "{{zahajeni_dodavek}}": format_date(data.get("zahajeni_dodavek", "")),
         "{{prolongace}}": format_date(data.get("prolongace", "")),
-        "{{ean}}": data.get("ean", ""),
+        "{{eic}}": data.get("eic", ""),
         "{{ulice_odber}}": data.get("ulice_odber", ""),
         "{{mesto_odber}}": data.get("mesto_odber", ""),
         "{{psc_odber}}": data.get("psc_odber", "")
