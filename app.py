@@ -1,35 +1,23 @@
-
 from flask import Flask, request, send_file
 from docx import Document
 import os
 import io
 import tempfile
 from flask_cors import CORS
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
 
-def format_date(d):
-    return d.strip() if d else ""
-
-def replace_placeholders(doc, placeholders):
-    for para in doc.paragraphs:
-        for run in para.runs:
-            for key, val in placeholders.items():
-                if key in run.text:
-                    run.text = run.text.replace(key, val)
-    for table in doc.tables:
-        for row in table.rows:
-            for cell in row.cells:
-                for para in cell.paragraphs:
-                    for run in para.runs:
-                        for key, val in placeholders.items():
-                            if key in run.text:
-                                run.text = run.text.replace(key, val)
+def format_date(date_str):
+    try:
+        return datetime.strptime(date_str, "%d.%m.%Y").strftime("%d.%m.%Y")
+    except:
+        return date_str
 
 @app.route('/')
 def index():
-    return "DOCX contract generator for GAS - DOMACNOST is running."
+    return "DOCX contract generator with formatted template is running."
 
 @app.route('/api/generate', methods=['POST'])
 def generate():
@@ -59,12 +47,25 @@ def generate():
         "{{psc_odber}}": data.get("psc_odber", "")
     }
 
-    replace_placeholders(doc, placeholders)
+    for para in doc.paragraphs:
+        for run in para.runs:
+            for key, val in placeholders.items():
+                if key in run.text:
+                    run.text = run.text.replace(key, val)
+
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                for para in cell.paragraphs:
+                    for run in para.runs:
+                        for key, val in placeholders.items():
+                            if key in run.text:
+                                run.text = run.text.replace(key, val)
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
         doc.save(tmp.name)
         tmp.seek(0)
-        return send_file(tmp.name, as_attachment=True, download_name="Rekapitulace_smlouvy_plyn_domacnost.docx")
+        return send_file(tmp.name, as_attachment=True, download_name="Rekapitulace_smlouvy_plyn.docx")
 
 if __name__ == "__main__":
     app.run(debug=False, host="0.0.0.0", port=10000)
