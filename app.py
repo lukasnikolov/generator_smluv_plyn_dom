@@ -1,4 +1,3 @@
-
 from flask import Flask, request, send_file
 from docx import Document
 import os
@@ -8,6 +7,14 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
+
+def format_date(date_str):
+    if not date_str:
+        return ""
+    parts = date_str.split(".")
+    if len(parts) == 3:
+        return f"{parts[0]}.{parts[1]}.{parts[2]}"
+    return date_str
 
 @app.route('/')
 def index():
@@ -40,8 +47,6 @@ def generate():
         "mesto_odber": data.get("mesto_odber", ""),
         "psc_odber": data.get("psc_odber", "")
     }
-
-     }
 
     for para in doc.paragraphs:
         for key, val in placeholders.items():
